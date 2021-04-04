@@ -1,0 +1,14 @@
+{
+  "name": "TimesAnalysis",
+  "version": "1.0.0",
+  "description": "times topic analyzer",
+  "main": "src/main.ts",
+  "repository": "https://github.com/Set022525/TimesAnalysis.git",
+  "author": "Set022525",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.30",
+    "typescript": "^4.2.3"
+  }
+}
