@@ -1,5 +1,5 @@
-const slack_app_token =
-""
+const properties = PropertiesService.getScriptProperties()
+const slack_app_token = properties.getProperty("SLACKAPPTOKEN") as string;
 
 
 function postDM() {
