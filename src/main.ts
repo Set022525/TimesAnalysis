@@ -1,17 +1,17 @@
-import {URL_Fetch} from "google-apps-script"
+
 
 function postSlack(text, debug = false) {
     var url = "https://hooks.slack.com/services/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";
     if (debug) {
       url = "https://hooks.slack.com/services/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";
     }
-    var options = {
-      "method": "POST",
+    var options:GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      "method": "post",
       "headers": { "Content-type": "application/json" },
       "payload": '{"text":"' + text + '"}'
     };
-    type URL_Fetch.HttpMethod = string
-    UrlFetchApp.fetch(url, {});
+   
+    UrlFetchApp.fetch(url, options);
   }
   ​
   function getEmojiList() {
