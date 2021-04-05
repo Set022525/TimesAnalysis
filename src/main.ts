@@ -66,25 +66,45 @@ function isValidEvent(event) {
 }
 
 function doPost(e) {
-  let REQUEST_TYPE_URL_VERIFICATION = "url_verification";
-  let REQUEST_TYPE_EVENT_CALLBACK = "event_callback";
-  let request = normalizeRequest_(e);
-  let requestType = request.type;
-  //  report(request)
-  if (requestType === REQUEST_TYPE_URL_VERIFICATION) {
-    let challenge = request.challenge;
-    return createTextOutput_(challenge);
-  } else if (
-    requestType === REQUEST_TYPE_EVENT_CALLBACK &&
-    isValidEvent(request.event)
-  ) {
-    let event = request.event;
-    let user = event.user;
+  try {
+    let REQUEST_TYPE_URL_VERIFICATION = "url_verification";
+    let REQUEST_TYPE_EVENT_CALLBACK = "event_callback";
+    let request = normalizeRequest_(e);
+    let requestType = request.type;
+    //  report(request)
+    if (requestType === REQUEST_TYPE_URL_VERIFICATION) {
+      let challenge = request.challenge;
+      return createTextOutput_(challenge);
+    } else if (
+      requestType === REQUEST_TYPE_EVENT_CALLBACK &&
+      isValidEvent(request.event)
+    ) {
+      let event = request.event;
+      let user = event.user;
 
-    let param: GoogleAppsScript.Mail.MailAdvancedParameters;
-    param.to = "yukikaze.0511@gmail.com";
-    param.body = user;
+      let param: GoogleAppsScript.Mail.MailAdvancedParameters = {
+        to: "yukikaze.0511@gmail.com",
+        body: user,
+        subject: "test",
+      };
 
-    MailApp.sendEmail(param);
+      MailApp.sendEmail(param);
+    }
+  } catch (e) {
+    report("Error", e?.message);
   }
+}
+
+function report(...data: any) {
+  let param: GoogleAppsScript.Mail.MailAdvancedParameters = {
+    to: "yukikaze.0511@gmail.com",
+    body: JSON.stringify(data, null, 2),
+    subject: "report",
+  };
+
+  MailApp.sendEmail(param);
+}
+
+function testReport() {
+  console.log(report(1, 2, 3, ["abc"], { def: 4 }));
 }
