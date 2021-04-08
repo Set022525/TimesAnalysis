@@ -2,9 +2,8 @@ const properties = PropertiesService.getScriptProperties();
 const slack_app_token = properties.getProperty("SLACKAPPTOKEN") as string;
 let user;
 
-var ss = SpreadsheetApp.getActiveSpreadsheet();
-var sh = ss.getActiveSheet();
-
+const ss = SpreadsheetApp.getActiveSpreadsheet();
+const sh = ss.getActiveSheet();
 function getSlack() {
   // チャンネルリストを取得
   const token = "slack_app_token";
