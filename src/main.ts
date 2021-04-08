@@ -7,100 +7,30 @@ var sh = ss.getActiveSheet();
 
 function getSlack() {
   // チャンネルリストを取得
-  var token = "取得したトークン";
-  var url = "https://slack.com/api/channels.list?token=" + token + "";
-  var response = UrlFetchApp.fetch(url);
+  const token = "slack_app_token";
+  const get_list_url = "https://slack.com/api/conversations.list?token=" + token + "";
+  var response = UrlFetchApp.fetch(get_list_url);
   var json = response.getContentText();
   var data = JSON.parse(json);
 
-  console.log(response, json, data);
   // 対象となるチャンネル名から対応するチャンネルIDを探し出す
-  //   var channel_name = sh.getRange(1,2).getValue();
-  //   for (var i=0; i<data.channels.length; i++) {
-  //     if (data.channels[i].name == channel_name) {
-  //       var channel_id = data.channels[i].id;
-  //       break;
-  //     }
-  //   }
+    let channel_name = sh.getRange(1,2).getValue();
 
-  //   // 取得したチャンネルIDをもとにチャンネル内のすべてのメッセージを取得
-  //   var url = "https://slack.com/api/channels.history?token="+token+"&channel="+channel_id+"";
-  //   var response = UrlFetchApp.fetch(url);
-  //   var json = response.getContentText();
-  //   var data = JSON.parse(json);
-
-  //   // スプレッドシートに取り込む
-
-  //   // 最終行取得
-  //   var lr = sh.getLastRow();
-  //   // 初期化
-  //   if (lr > 2) sh.getRange(3,1,lr-2,sh.getLastColumn()).clear();
-  //   // 出てきそうな項目名を予め列挙しておく(この辺は必要に応じて加減すればよいでしょう）
-  //   var item = [
-  //     "file",
-  //     "text",
-  //     "type",
-  //     "user",
-  //     "ts"
-  //   ];
-  //   // 2次元配列化
-  //   var ary = [];
-  //   var ary2 = [];
-  //   for (var i=0; i<data.messages.length; i++) {
-  //     for (var j=0; j<item.length; j++) {
-  //       ary.push(data.messages[i][item[j]]);
-  //       // もしundefinedなら空欄に直す
-  //       if (!ary[j]) {
-  //         ary[j] = "";
-  //       }
-  //     }
-  //     ary2.push(ary);
-  //     ary = [];
-  //   }
-  //   // スプレッドシートに転記
-  //   sh.getRange(3,1,ary2.length,item.length).setValues(ary2);
-}
-
-// let ss = SpreadsheetApp.getActiveSpreadsheet();
-// let sh = ss.getActiveSheet();
-
-function getChannelHistory() {
-  var token = slack_app_token;
-  // query parameter
-
-  // ?変数名=データ&次の変数名=データ2
-  var url = "https://slack.com/api/conversations.history?token=" + token + "";
-  var response = UrlFetchApp.fetch(url);
-  var json = response.getContentText();
-  var data = JSON.parse(json);
-
-  var channel_name = sh.getRange(1, 2).getValue();
-  // var channel_name = "times_yuki_minoh";
-
-  let channel_id = "";
-  for (const channel of data.channels) {
-    if (channel_name == channel.name) {
-      channel_id = channel.id;
+    for (var i=0; i<data.length; i++) {
+      if (data.channels[i].name == channel_name) {
+        var channel_id = data.channels[i].id;
+        break;
+      }
     }
-  }
 
-  // for (var i = 0; i < data.channels.length; i++) {
-  //   if (data.channels[i].name == channel_name) {
-  //     // var channel_id = data.channels[i].id;
-  //     break;
-  //   }
-  // }
-  let options = {};
-  var url =
-    "https://slack.com/api/channels.history?token=" +
-    token +
-    "&channel=" +
-    channel_id;
-  var response = UrlFetchApp.fetch(url, options);
-  var json = response.getContentText();
-  var data = JSON.parse(json);
-  return data;
+    // 取得したチャンネルIDをもとにチャンネル内のすべてのメッセージを取得
+    const get_message_url = "https://slack.com/api/admin.conversations.getConversationPrefs?token="+token+"&channel="+channel_id+"";
+    var response = UrlFetchApp.fetch(get_message_url);
+    var json = response.getContentText();
+    var data = JSON.parse(json);
+  return data
 }
+
 
 function normalizeRequest_(e: GoogleAppsScript.Events.DoPost) {
   //  report(e)
