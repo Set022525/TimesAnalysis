@@ -30,6 +30,10 @@ function getSlack() {
   return data
 }
 
+function test_getSlack(){
+  const test = getSlack();
+  console.log("getSlack",test)
+}
 
 function normalizeRequest_(e: GoogleAppsScript.Events.DoPost) {
   //  report(e)
