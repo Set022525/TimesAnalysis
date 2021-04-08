@@ -12,6 +12,6 @@
     "typescript": "^4.2.3"
   },
   "scripts": {
-    "deploy": "clasp push"
+    "test": "clasp push && clasp open"
   }
 }
