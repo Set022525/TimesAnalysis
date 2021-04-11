@@ -1,21 +1,30 @@
 const properties = PropertiesService.getScriptProperties();
-const slack_app_token = properties.getProperty("SLACKAPPTOKEN") as string;
+let slack_app_token = properties.getProperty("SLACKAPPTOKEN") as string;
 let user;
 
 const ss = SpreadsheetApp.getActiveSpreadsheet();
 const sh = ss.getActiveSheet();
 function getSlack() {
   // チャンネルリストを取得
-  const token = "slack_app_token";
+  const token = slack_app_token;
   const get_list_url = "https://slack.com/api/conversations.list?token=" + token + "";
-  var response = UrlFetchApp.fetch(get_list_url);
+  
+  const get_list_options:GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: "get",
+    contentType: "application/x-www-form-urlencoded",
+    payload: {
+      token: slack_app_token,
+   }
+ }
+
+  var response = UrlFetchApp.fetch(get_list_url,get_list_options);
   var json = response.getContentText();
   var data = JSON.parse(json);
 
   // 対象となるチャンネル名から対応するチャンネルIDを探し出す
     let channel_name = sh.getRange(1,2).getValue();
 
-    for (var i=0; i<data.length; i++) {
+    for (var i=0; i<data.length;i++) {
       if (data.channels[i].name == channel_name) {
         var channel_id = data.channels[i].id;
         break;
@@ -24,7 +33,15 @@ function getSlack() {
 
     // 取得したチャンネルIDをもとにチャンネル内のすべてのメッセージを取得
     const get_message_url = "https://slack.com/api/admin.conversations.getConversationPrefs?token="+token+"&channel="+channel_id+"";
-    var response = UrlFetchApp.fetch(get_message_url);
+    const get_message_options :GoogleAppsScript.URL_Fetch.URLFetchRequestOptions= {
+      method: "post",
+      contentType: "application/x-www-form-urlencoded",
+      payload: {
+        token: slack_app_token,
+        channel_id: channel_id,
+     }
+    };
+    var response = UrlFetchApp.fetch(get_message_url,get_message_options);
     var json = response.getContentText();
     var data = JSON.parse(json);
   return data
