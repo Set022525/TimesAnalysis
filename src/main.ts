@@ -32,9 +32,9 @@ function getSlack() {
     }
 
     // 取得したチャンネルIDをもとにチャンネル内のすべてのメッセージを取得
-    const get_message_url = "https://slack.com/api/admin.conversations.getConversationPrefs?token="+token+"&channel="+channel_id+"";
+    const get_message_url = "https://slack.com/api/conversations.history?token="+token+"&channel="+channel_id+"";
     const get_message_options :GoogleAppsScript.URL_Fetch.URLFetchRequestOptions= {
-      method: "post",
+      method: "get",
       contentType: "application/x-www-form-urlencoded",
       payload: {
         token: slack_app_token,
