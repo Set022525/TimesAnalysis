@@ -2,6 +2,7 @@ function testSuite() {
   testWordIndex();
   testTimesIndex();
   testSheetManager();
+  testTFIDF();
 }
 
 function tfidf(tf: number, rate: number) {
@@ -36,27 +37,39 @@ class SheetManager {
 
   getRect(a1notation: string) {
     const range = this.book.getRange(a1notation);
-    return {
+    const result = {
       sheet: range.getSheet().getName(),
       rect: {
         row: range.getRow(),
         column: range.getColumn(),
-        numRows: range.getLastRow(),
-        numColumns: range.getLastColumn(),
+        numRows: 0,
+        numColumns: 0,
       },
     };
+    const values = range.getValues();
+
+    // assert dimensionDirection: rows first
+    let row = 0;
+    for (const val of values.reverse()) {
+      let column = val.reverse().findIndex((v) => v);
+
+      if (column > -1) {
+        console.log("This is true: ", val[column]);
+        [result.rect.numRows, result.rect.numColumns] = [
+          values.length - row,
+          val.length - column,
+        ];
+        break;
+      }
+      row++;
+    }
+    return result;
   }
 
   getA1(sheetName: string, rect: DataRect) {
-    const list = Object.keys(rect).map((key) => rect[key]) as [
-      number,
-      number,
-      number,
-      number
-    ];
     return this.book
       .getSheetByName(sheetName)
-      .getRange(...list)
+      .getRange(rect.row, rect.column, rect.numRows, rect.numColumns)
       .getA1Notation();
   }
 
@@ -74,6 +87,7 @@ class SheetManager {
     for (const range of ranges) {
       range.setValues(this.updates[i++].values);
     }
+    this.updates = [];
     return this;
   }
 
@@ -82,12 +96,7 @@ class SheetManager {
     const range = this.book.getRange(area);
     const sheet = range.getSheet();
     const rect = this.getRect(area).rect;
-    // console.log(JSON.stringify(rect, null, 2));
-    rect.numRows =
-      Math.min(rect.row + rect.numRows - 1, Math.max(1, sheet.getLastRow())) +
-      1;
-    rect.numRows -= rect.row;
-    // console.log(JSON.stringify(rect, null, 2));
+    console.log(JSON.stringify(rect, null, 2));
     const a1Notation = this.getA1(sheet.getName(), rect);
     return sheet.getRange(a1Notation).getValues();
   }
@@ -100,7 +109,7 @@ abstract class ManagedIndex<TBase> extends Array<TBase> implements SheetData {
 
   constructor(...data: TBase[]) {
     super(...data);
-    Object.setPrototypeOf(this, ManagedIndex.prototype);
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 
   update(data: TBase[]) {
@@ -151,28 +160,66 @@ abstract class ManagedIndex<TBase> extends Array<TBase> implements SheetData {
 
   setManager(manager: SheetManager) {
     this.manager = manager;
+    return this;
   }
 
+  getNumber(key: TBase) {
+    return this.findIndex((k) => k === key);
+  }
 }
 
 class WordIndex extends ManagedIndex<string> {
   readonly area = "'index'!A:A";
   readonly depth = 1;
-  getNumber(key: string) {
-    return this.findIndex((k) => k === key);
-  }
+
   // parser = ManagedIndex.wrappedArrayParser;
 }
 
 class TimesIndex extends ManagedIndex<string> {
   readonly area = "'index'!B:B";
   readonly depth = 1;
-  getNumber(key: string) {
-    return this.findIndex((k) => k === key);
+}
+
+abstract class IndexedMatrix extends ManagedIndex<ManagedIndex<string>> {
+  protected columns: ManagedIndex<string>;
+  protected rows: ManagedIndex<string>;
+  readonly area: string;
+  readonly depth = 2;
+  constructor(columns: ManagedIndex<string>, rows: ManagedIndex<string>) {
+    super();
+    // Object.setPrototypeOf(this, IndexedMatrix)
+    this.columns = columns;
+    this.rows = rows;
   }
+  column(columnName: string) {
+    const i = this.columns.getNumber(columnName);
+    // const areaData = this.manager.getRect(`'${this.area}'!A:A`);
+    // areaData.rect.numColumns = 1;
+    // areaData.rect.column = i + 1;
+    // const matrixContext = this;
+    const notation = this.manager.getA1(this.area, {
+      row: 1,
+      column: i + 1,
+      numColumns: 1,
+      numRows: this.rows.length,
+    });
+    const constructor = class ManagedColumn extends ManagedIndex<number> {
+      readonly area = notation;
+      readonly depth = 1;
+    };
+    const result = new constructor();
+    return result;
+  }
+  row() {}
+}
+
+class TFIDF extends IndexedMatrix {
+  readonly area = "TFIDF";
 }
 
 function testWordIndex() {
+  console.log("===testWordIndex===");
+
   const test = new WordIndex();
   console.log("init", test);
   const manager = new SheetManager();
@@ -180,9 +227,13 @@ function testWordIndex() {
   console.log("load", test.load());
   test.update(["abc", "def"]);
   console.log("update", test);
+
+  console.log("===testWordIndex===");
 }
 
 function testTimesIndex() {
+  console.log("===testTimesIndex===");
+
   const test = new TimesIndex();
   console.log("init", test);
   const manager = new SheetManager();
@@ -190,17 +241,40 @@ function testTimesIndex() {
   console.log("load", test.load());
   test.update(["abc", "def"]);
   console.log("update", test);
+
+  console.log("===testTimesIndex===");
 }
 
 function testSheetManager() {
+  console.log("=== testSheetManager ===");
+
   const test = new SheetManager();
   console.log("init", test);
 
   const words = new WordIndex();
   words.setManager(test);
   words.load();
-console.log("load", test, words);
+  console.log("load", test, words);
   words.update(["abc", "def"]);
   console.log("update", test);
   console.log("doUpdate", test.doUpdate());
+
+  console.log("=== testSheetManager ===");
+}
+
+function testTFIDF() {
+  console.log("=== testTFIDF ===");
+  const manager = new SheetManager();
+
+  const test = new TFIDF(
+    new TimesIndex().setManager(manager).load(),
+    new WordIndex().setManager(manager).load()
+  );
+  console.log("init", test);
+  test.setManager(manager);
+  console.log("column", test.column("testTimes2"));
+  // test.update(["abc", "def"]);
+  // console.log("update", test);
+
+  console.log("=== testTFIDF ===");
 }
