@@ -78,6 +78,8 @@ function isValidEvent(event) {
 function doPost(e: GoogleAppsScript.Events.DoPost) {
   const REQUEST_TYPE_URL_VERIFICATION = "url_verification";
   const REQUEST_TYPE_EVENT_CALLBACK = "event_callback";
+  const REQUEST_TYPE_
+
 
   let request = normalizeRequest_(e);
   const requestType = request.type;
