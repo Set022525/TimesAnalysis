@@ -7,15 +7,16 @@ const sh = ss.getActiveSheet();
 function getSlack() {
   // チャンネルリストを取得
   const token = slack_app_token;
-  const get_list_url =
-    "https://slack.com/api/conversations.list?token=" + token + "";
+  const get_list_url = "https://slack.com/api/conversations.list";
+
+  console.log(token, get_list_url)
 
   const get_list_options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "get",
     contentType: "application/x-www-form-urlencoded",
-    payload: {
-      token: slack_app_token,
-    },
+    headers:{
+      Authorization: "Bearer " + slack_app_token
+    }
   };
 
   var response = UrlFetchApp.fetch(get_list_url, get_list_options);
@@ -32,20 +33,20 @@ function getSlack() {
     }
   }
 
+  // console.log(channel_id, response, json, data)
+
   // 取得したチャンネルIDをもとにチャンネル内のすべてのメッセージを取得
   const get_message_url =
-    "https://slack.com/api/conversations.history?token=" +
-    token +
-    "&channel=" +
-    channel_id +
-    "";
+    "https://slack.com/api/conversations.history" ;
   const get_message_options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: "get",
-    contentType: "application/x-www-form-urlencoded",
     payload: {
       token: slack_app_token,
       channel_id: channel_id,
     },
+    headers:{
+      Authorization: "Bearer" + slack_app_token
+    }
   };
   var response = UrlFetchApp.fetch(get_message_url, get_message_options);
   var json = response.getContentText();
