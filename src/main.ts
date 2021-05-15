@@ -34,16 +34,17 @@ function getSlack() {
 
   // 取得したチャンネルIDをもとにチャンネル内のすべてのメッセージを取得
   const get_message_url = "https://slack.com/api/conversations.history";
-  const get_message_options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: "get",
-    payload: {
-      token: slack_app_token,
-      channel_id: channel_id,
-    },
-    headers: {
-      Authorization: "Bearer" + slack_app_token,
-    },
-  };
+  const get_message_options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions =
+    {
+      method: "get",
+      payload: {
+        token: slack_app_token,
+        channel_id: channel_id,
+      },
+      headers: {
+        Authorization: "Bearer" + slack_app_token,
+      },
+    };
   var response = UrlFetchApp.fetch(get_message_url, get_message_options);
   var json = response.getContentText();
   var data = JSON.parse(json);
@@ -71,10 +72,30 @@ function isValidEvent(event) {
   return !event.hidden; // null -> true
 }
 
+function AltgetSlack(MASSAGE_CHANNEL) {
+  const get_message_url = "https://slack.com/api/conversations.history";
+  const get_message_options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions =
+    {
+      method: "get",
+      payload: {
+        token: slack_app_token,
+        channel_id: MASSAGE_CHANNEL,
+      },
+      headers: {
+        Authorization: "Bearer" + slack_app_token,
+      },
+    };
+  var response = UrlFetchApp.fetch(get_message_url, get_message_options);
+  var json = response.getContentText();
+  var data = JSON.parse(json);
+  return data;
+}
+
 function doPost(e: GoogleAppsScript.Events.DoPost) {
   const REQUEST_TYPE_URL_VERIFICATION = "url_verification";
   const REQUEST_TYPE_EVENT_CALLBACK = "event_callback";
   const REQUEST_TYPE_TEAM_JOIN = "team_join";
+  const REQUEST_TYPE_MASSAGE = "message";
 
   let request = normalizeRequest_(e);
   const requestType = request.type;
@@ -86,14 +107,25 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     requestType === REQUEST_TYPE_EVENT_CALLBACK &&
     isValidEvent(request.event)
   ) {
-　　　//channnelのデータをとってくる
-  } else if (requestType == REQUEST_TYPE_TEAM_JOIN) {
-      let event = request.event;
-      let user = event.user as string;
-      postDM(user);
-    } else {
-
+    const eventType = request.event.type;
+    let channel = request.event.channel;
+    if (eventType === REQUEST_TYPE_MASSAGE && channel.match(/times/)) {
+      AltgetSlack(channel);
     }
+  } else if (requestType === REQUEST_TYPE_TEAM_JOIN) {
+    let event = request.event;
+    let user = event.user as string;
+    postDM(user);
+  }
+}
+
+function test_doPost() {
+  const param = {
+    type: "team_join",
+    user: {},
+  };
+  const test = doPost(param);
+  console.log("doPost", test);
 }
 
 function report(...data: any) {
